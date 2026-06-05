@@ -142,7 +142,7 @@ Verified on the production warehouse (real data, ClickHouse 24.8):
 | Metric | Proposal target | Achieved |
 |--------|-----------------|----------|
 | Data sources loaded | ≥ 15 | **15** |
-| Total fact rows | ≥ 500,000 | **3,340,211** |
+| Total fact rows | ≥ 500,000 | **3,340,211 ingested · 2,963,890 stored (deduped)** |
 | Fact tables / dimensions | ≥ 8 / ≥ 3 | **12 / 6** |
 | Materialized views | ≥ 5 (incremental + refreshable) | **6** (5 incremental + 1 refreshable) |
 | Analytical queries < 2 s | ≥ 10 | **12** |
