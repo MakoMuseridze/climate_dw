@@ -1,0 +1,35 @@
+# ---- Large raw downloads & staging (keep out of git; archive locally) ----
+data/raw/*
+data/staging/*
+!data/raw/.gitkeep
+!data/staging/.gitkeep
+*.nc
+*.grib
+*.grib2
+*.zip
+*.gz
+*.tif
+*.tiff
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# ---- ClickHouse local / chdb scratch ----
+_local_ch/
+*.chdb/
+chdb_*/
+
+# ---- Secrets / credentials ----
+secrets.yml
+.cdsapirc
+.netrc
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

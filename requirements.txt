@@ -1,0 +1,31 @@
+# ============================================================
+# Global Climate Data Warehouse — Python dependencies
+# Python 3.11+
+# ============================================================
+
+# --- ClickHouse driver & core ETL ---
+clickhouse-connect>=0.7      # official ClickHouse Python driver (bulk insert + query)
+pandas>=2.0                  # tabular ETL for CSV/Excel sources
+numpy>=1.26
+requests>=2.31              # HTTP client for API-based sources (World Bank, etc.)
+python-dateutil>=2.9
+pyyaml>=6.0                  # config / source registry
+tqdm>=4.66                  # progress bars on long loads
+
+# --- Excel / text sources (EM-DAT, EDGAR, Global Carbon Budget) ---
+openpyxl>=3.1
+xlrd>=2.0
+
+# --- Country code harmonization (ISO3 standardization) ---
+country-converter>=1.2
+
+# --- Gridded NetCDF climate data (ERA5, GPCC, HadCRUT5, NOAAGlobalTemp) ---
+# Heavy / optional: only needed when ingesting the gridded sources.
+xarray>=2024.0
+netCDF4>=1.6
+regionmask>=0.12            # spatial aggregation gridded -> country level
+geopandas>=0.14            # country boundary polygons for spatial joins
+cdsapi>=0.6                # Copernicus Climate Data Store (ERA5) client
+
+# --- Local validation only (Linux; used by scripts/validate_local.py). NOT needed to run the warehouse. ---
+# chdb>=2.0   # pip install separately on Linux if you want the offline self-test
