@@ -33,3 +33,6 @@ secrets.yml
 Thumbs.db
 .idea/
 .vscode/
+
+# ---- Pre-built warehouse bundle (publish via GitHub Release / Zenodo, not git) ----
+release/

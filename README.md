@@ -58,6 +58,28 @@ make validate
 
 ---
 
+## Use the pre-built warehouse (no downloads)
+
+Don't want to research and download 15 data sources? Grab the **pre-built bundle** from the [Releases page](https://github.com/MakoMuseridze/climate_dw/releases) — the fully harmonized warehouse as compressed Parquet. Load it into a fresh ClickHouse and start querying in minutes:
+
+```bash
+make up                      # start ClickHouse + Grafana
+# download the release bundle and unzip it so the files land in release/parquet/
+make restore                 # load dimensions + facts; materialized views repopulate automatically
+make dq                      # confirm the data-quality scorecard
+```
+
+Maintainers regenerate the bundle from a loaded warehouse:
+
+```bash
+make export                  # full bundle -> release/
+make export ARGS=--public    # redistribution-safe subset (drops ND-GAIN & EM-DAT)
+```
+
+The bundle is data, not code, so it lives on the Releases page / Zenodo rather than in git. Per-source licences are listed in `release/ATTRIBUTION.md` (generated on export).
+
+---
+
 ## Loading the real sources
 
 ```bash
@@ -127,4 +149,4 @@ Verified on the production warehouse (real data, ClickHouse 24.8):
 
 A standout cross-source check: OWID and the Global Carbon Budget independently agree on global CO₂ to within **0.02%**.
 
-**No Docker or downloads?** `make validate` stands up the whole schema in an embedded ClickHouse, loads the offline test fixture, and runs every query + DQ check end-to-end (~900k fixture rows, 12/12 queries < 2 s, 11/11 checks pass) — exercising the identical SQL the production warehouse uses.
+**No Docker or downloads?** `make validate` stands up the whole schema in an embedded ClickHouse, loads the offline test fixture, and runs every query + DQ check end-to-end (~900k fixture rows, 12/12 queries < 2 s, 11/11 checks pass) — exercising the identical SQL the production warehouse 

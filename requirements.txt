@@ -29,3 +29,6 @@ cdsapi>=0.6                # Copernicus Climate Data Store (ERA5) client
 
 # --- Local validation only (Linux; used by scripts/validate_local.py). NOT needed to run the warehouse. ---
 # chdb>=2.0   # pip install separately on Linux if you want the offline self-test
+
+# --- Parquet engine (export/restore bundles + offline self-test) ---
+pyarrow>=14.0

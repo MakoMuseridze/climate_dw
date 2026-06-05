@@ -55,4 +55,10 @@ list-sources:  ## list known sources and groups
 clean:  ## remove cached downloads and staging
 	rm -rf data/raw/* data/staging/* && touch data/raw/.gitkeep data/staging/.gitkeep
 
-.PHONY: help install up down ps logs init-schema seed load-quick load-file load-gridded load-all bootstrap dq validate list-sources clean
+export:  ## dump the loaded warehouse to release/ as a Parquet bundle (ARGS=--public to drop restricted sources)
+	$(PY) -m etl.export_warehouse $(ARGS)
+
+restore:  ## load a downloaded release/ bundle into a fresh ClickHouse (no source downloads)
+	$(PY) -m etl.restore_warehouse $(ARGS)
+
+.PHONY: help install up down ps logs init-schema seed load-quick load-file load-gridded load-all bootstrap dq validate list-sources clean export restore
