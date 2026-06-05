@@ -7,7 +7,7 @@ These guidelines document the conventions used throughout.
 ## Development setup
 
 ```bash
-git clone https://github.com/Makomus/climate_dw.git
+git clone https://github.com/MakoMuseridze/climate_dw.git
 cd climate_dw
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 make install

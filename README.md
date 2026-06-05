@@ -32,7 +32,7 @@ Requires **Docker** + Docker Compose and **Python 3.11+**. Five steps from a cle
 
 ```bash
 # 1. Clone
-git clone https://github.com/Makomus/climate_dw.git
+git clone https://github.com/MakoMuseridze/climate_dw.git
 cd climate_dw
 
 # 2. Python deps (for ETL)
