@@ -8,6 +8,7 @@ on any machine — no source downloads, registrations, or re-running the ETL.
 
     make export                  # full bundle (all loaded sources)
     make export ARGS=--public    # redistribution-safe subset (see below)
+    # Windows / no make:  python -m etl.export_warehouse [--public]
 
 Licensing: most sources are CC-BY or public domain (fine to redistribute with
 attribution). ``--public`` drops the two with restrictive terms — ND-GAIN
@@ -34,20 +35,25 @@ COMPRESSION = "zstd"
 # Sources whose licence restricts open redistribution; excluded by --public.
 RESTRICTED_SOURCE_IDS = {4, 5}   # 4 = ND-GAIN (CC-BY-NC-SA), 5 = EM-DAT (registration)
 META_COLUMNS = {"_inserted_at", "_version"}
+# MergeTree variants that support SELECT ... FINAL (collapse not-yet-merged rows).
+# Plain MergeTree does NOT, so FINAL is applied only where the engine allows it.
+FINAL_ENGINES = ("Replacing", "Aggregating", "Summing", "Collapsing")
 
 
 def _scalar(client, sql):
     return client.query(sql).result_rows[0][0]
 
 
-def _tables(client):
+def _table_engines(client):
     rows = client.query(
-        f"SELECT name FROM system.tables WHERE database='{DATABASE}' "
+        f"SELECT name, engine FROM system.tables WHERE database='{DATABASE}' "
         f"AND (startsWith(name, 'dim_') OR startsWith(name, 'fact_')) ORDER BY name"
     ).result_rows
-    dims = [r[0] for r in rows if r[0].startswith("dim_")]
-    facts = [r[0] for r in rows if r[0].startswith("fact_")]
-    return dims, facts
+    return [(r[0], r[1]) for r in rows]
+
+
+def _supports_final(engine: str) -> bool:
+    return any(k in engine for k in FINAL_ENGINES)
 
 
 def _insertable_columns(client, table):
@@ -62,11 +68,14 @@ def _insertable_columns(client, table):
 def export(public: bool = False):
     client = db.get_client(DATABASE)
     os.makedirs(PARQUET_DIR, exist_ok=True)
-    dims, facts = _tables(client)
+    tables = _table_engines(client)
+    dims = [n for n, _ in tables if n.startswith("dim_")]
+    facts = [n for n, _ in tables if n.startswith("fact_")]
+    engine_of = {n: e for n, e in tables}
 
     manifest = {
         "warehouse": "Global Climate Data Warehouse",
-        "exported_at": dt.datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "exported_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "mode": "public" if public else "full",
         "clickhouse_version": _scalar(client, "SELECT version()"),
         "tables": {},
@@ -76,11 +85,12 @@ def export(public: bool = False):
     for t in dims + facts:
         cols = _insertable_columns(client, t)
         col_sql = ", ".join(f"`{c}`" for c in cols)
+        final = " FINAL" if _supports_final(engine_of.get(t, "")) else ""
         where = ""
         if public and t in facts and "source_id" in cols:
             ids = ", ".join(str(i) for i in sorted(RESTRICTED_SOURCE_IDS))
             where = f" WHERE source_id NOT IN ({ids})"
-        df = client.query_df(f"SELECT {col_sql} FROM {DATABASE}.`{t}` FINAL{where}")
+        df = client.query_df(f"SELECT {col_sql} FROM {DATABASE}.`{t}`{final}{where}")
         if public and t in facts and len(df) == 0:
             print(f"  skip {t:28} (no redistributable rows)")
             continue
@@ -107,7 +117,7 @@ def export(public: bool = False):
     print(f"  {manifest['total_fact_rows']:,} fact rows · "
           f"{len(manifest['tables'])} tables · {total_bytes / 1e6:.1f} MB total")
     print("  Next: zip the release/ folder and attach it to a GitHub Release or Zenodo record.")
-    print("        Recipients reload it with `make restore`.")
+    print("        Recipients reload it with `make restore` (or python -m etl.restore_warehouse).")
 
 
 def _write_attribution(sources, public):

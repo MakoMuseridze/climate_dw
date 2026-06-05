@@ -6,6 +6,24 @@
 - **Python 3.11+**
 - ~5 GB free disk for raw downloads + ClickHouse data (more if you load the gridded NetCDF sources)
 
+## Windows (without `make`)
+
+`make` isn't installed on Windows by default, and the offline self-test (`make validate`) needs `chdb`, which is Linux/macOS-only. Everything else works the same — each `make` target is just a shortcut. Run the command on the right in PowerShell (or install make with `winget install GnuWin32.Make`):
+
+| `make` target | Windows command |
+|---|---|
+| `make install` | `pip install -r requirements.txt` |
+| `make up` / `make down` | `docker compose up -d` / `docker compose down` |
+| `make ps` | `docker compose ps` |
+| `make bootstrap` | `python -m etl.run_etl --bootstrap` |
+| `make load-quick` / `load-file` / `load-gridded` | `python -m etl.run_etl --group quick` (or `file` / `gridded`) |
+| `make dq` | `python -m etl.dq` |
+| `make export` | `python -m etl.export_warehouse` (add `--public` to drop restricted sources) |
+| `make restore` | `python -m etl.restore_warehouse` |
+| `make list-sources` | `python -m etl.run_etl --list` |
+
+ClickHouse + Grafana still run via Docker Desktop (Windows-supported); only the `chdb` self-test is unavailable on Windows.
+
 ## 1. Python environment
 
 ```bash

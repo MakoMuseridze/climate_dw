@@ -78,6 +78,8 @@ make export ARGS=--public    # redistribution-safe subset (drops ND-GAIN & EM-DA
 
 The bundle is data, not code, so it lives on the Releases page / Zenodo rather than in git. Per-source licences are listed in `release/ATTRIBUTION.md` (generated on export).
 
+> **On Windows (no `make`):** replace each `make <target>` with its command — e.g. `make restore` → `python -m etl.restore_warehouse`, `make up` → `docker compose up -d`. Full table in [docs/installation.md](docs/installation.md#windows-without-make).
+
 ---
 
 ## Loading the real sources
