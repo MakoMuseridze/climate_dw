@@ -1,0 +1,87 @@
+{
+  "annotations": {"list": [{"builtIn": 1, "datasource": {"type": "grafana", "uid": "-- Grafana --"}, "enable": true, "hide": true, "name": "Annotations & Alerts", "type": "dashboard"}]},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "tags": ["climate", "warehouse"],
+  "time": {"from": "1960-01-01T00:00:00.000Z", "to": "2024-12-31T00:00:00.000Z"},
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Global Climate Data Warehouse — Overview",
+  "uid": "climate-overview",
+  "version": 1,
+  "templating": {"list": []},
+  "panels": [
+    {
+      "id": 1, "title": "Global temperature anomaly (vs 1951–1980)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "celsius", "custom": {"drawStyle": "line", "fillOpacity": 10}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT date AS time, temp_anomaly_c AS \"anomaly_c\" FROM climate.fact_temperature WHERE country_id = 0 ORDER BY date"}]
+    },
+    {
+      "id": 2, "title": "Atmospheric CO₂ — Mauna Loa (ppm)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "ppm", "custom": {"drawStyle": "line", "fillOpacity": 10}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT date AS time, co2_ppm AS \"co2_ppm\" FROM climate.fact_co2_atmospheric ORDER BY date"}]
+    },
+    {
+      "id": 3, "title": "CO₂ emissions by income group (Mt)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "fillOpacity": 15, "stacking": {"mode": "normal"}}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT toDateTime(concat(toString(e.year),'-01-01 00:00:00')) AS time, c.income_group AS metric, sum(e.co2_mt) AS value FROM climate.fact_emissions_co2 AS e INNER JOIN climate.dim_country AS c ON e.country_id = c.country_id WHERE e.source_id = 1 AND c.income_group != 'Aggregate' GROUP BY time, metric ORDER BY time"}]
+    },
+    {
+      "id": 4, "title": "Renewable share of energy by region (%)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "percent", "custom": {"drawStyle": "line", "fillOpacity": 5}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT toDateTime(concat(toString(en.year),'-01-01 00:00:00')) AS time, c.region AS metric, round(avg(en.renewables_share_pct),1) AS value FROM climate.fact_energy AS en INNER JOIN climate.dim_country AS c ON en.country_id = c.country_id WHERE en.year >= 1990 GROUP BY time, metric ORDER BY time"}]
+    },
+    {
+      "id": 5, "title": "Top 15 cumulative CO₂ emitters (Gt)", "type": "table",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 16},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT c.country_name AS country, c.income_group, round(max(e.cumulative_co2_mt)/1000,1) AS cumulative_gt_co2 FROM climate.fact_emissions_co2 AS e INNER JOIN climate.dim_country AS c ON e.country_id = c.country_id WHERE e.source_id = 1 GROUP BY country, c.income_group ORDER BY cumulative_gt_co2 DESC LIMIT 15"}]
+    },
+    {
+      "id": 6, "title": "Disaster deaths by decade & income group", "type": "timeseries",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 16},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "bars", "fillOpacity": 60}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT toDateTime(concat(toString(d.decade),'-01-01 00:00:00')) AS time, c.income_group AS metric, sum(d.deaths) AS value FROM climate.agg_disasters_by_type_decade AS d INNER JOIN climate.dim_country AS c ON d.country_id = c.country_id WHERE c.income_group != 'Aggregate' GROUP BY time, metric ORDER BY time"}]
+    },
+    {
+      "id": 7, "title": "Global mean sea level (mm)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "lengthmm", "custom": {"drawStyle": "line", "fillOpacity": 10}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT date AS time, gmsl_mm AS \"gmsl_mm\" FROM climate.fact_sea_level ORDER BY date"}]
+    },
+    {
+      "id": 8, "title": "CO₂ per capita by income group (t)", "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "fillOpacity": 5}}, "overrides": []},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT toDateTime(concat(toString(e.year),'-01-01 00:00:00')) AS time, c.income_group AS metric, round(avg(e.co2_per_capita_t),2) AS value FROM climate.fact_emissions_co2 AS e INNER JOIN climate.dim_country AS c ON e.country_id = c.country_id WHERE e.source_id = 1 AND e.year >= 1970 AND c.income_group != 'Aggregate' GROUP BY time, metric ORDER BY time"}]
+    },
+    {
+      "id": 9, "title": "Climate vulnerability vs disaster damage by income group", "type": "table",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 33},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+      "targets": [{"refId": "A", "format": 0, "datasource": {"type": "grafana-clickhouse-datasource", "uid": "climate_ch"},
+        "rawSql": "SELECT c.income_group, round(avg(v.nd_gain_index),1) AS avg_nd_gain, round(avg(v.vulnerability),3) AS avg_vulnerability, round(sum(d.total_damage_usd_k)/1e6,1) AS total_damage_bn_usd, sum(d.total_deaths) AS total_deaths FROM climate.fact_disasters AS d INNER JOIN climate.dim_country AS c ON d.country_id = c.country_id LEFT JOIN (SELECT country_id, avg(nd_gain_index) nd_gain_index, avg(vulnerability) vulnerability FROM climate.fact_vulnerability GROUP BY country_id) AS v ON d.country_id = v.country_id WHERE d.year >= 2000 GROUP BY c.income_group ORDER BY total_damage_bn_usd DESC"}]
+    }
+  ]
+}
